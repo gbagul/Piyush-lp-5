@@ -1,0 +1,93 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <omp.h>
+
+using namespace std;
+
+class Graph {
+public:
+    int V;
+    vector<vector<int>> adj;
+
+    // Constructor to initialize the graph with V vertices
+    Graph(int V) {
+        this->V = V;
+        adj.resize(V);
+    }
+
+    // Function to add an edge to the graph
+    void addEdge(int u, int v) {
+        adj[u].push_back(v);
+        adj[v].push_back(u); // Since it's an undirected graph
+    }
+
+    // Parallel DFS function
+    void parallelDFS(int start) {
+        vector<bool> visited(V, false);  // Track visited nodes
+        stack<int> s;
+        s.push(start);
+        visited[start] = true;
+
+        // Parallelize DFS using OpenMP
+        #pragma omp parallel
+        {
+            while (true) {
+                int node = -1;
+                // Critical section to pop from the stack
+                #pragma omp critical
+                {
+                    if (!s.empty()) {
+                        node = s.top();
+                        s.pop();
+                    }
+                }
+
+                if (node == -1) {
+                    break;  // Break out when stack is empty
+                }
+
+                // Print the node visited by this thread
+                #pragma omp critical
+                {
+                    cout << "Visited node " << node << " by thread " << omp_get_thread_num() << endl;
+                }
+
+                // Explore neighbors of the current node in parallel
+                #pragma omp parallel for
+                for (int i = 0; i < adj[node].size(); ++i) {
+                    int neighbor = adj[node][i];
+                    // Only explore if the neighbor hasn't been visited
+                    if (!visited[neighbor]) {
+                        bool expected = false;
+                        // Critical section to ensure only one thread marks a neighbor as visited
+                        #pragma omp critical
+                        {
+                            if (!visited[neighbor]) {
+                                visited[neighbor] = true;
+                                s.push(neighbor);  // Add neighbor to stack
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+};
+
+int main() {
+    // Create a graph with 8 nodes
+    Graph g(8);
+    g.addEdge(0, 1);
+    g.addEdge(0, 2);
+    g.addEdge(1, 3);
+    g.addEdge(1, 4);
+    g.addEdge(2, 5);
+    g.addEdge(2, 6);
+    g.addEdge(6, 7);
+
+    cout << "Parallel DFS starting from node 0:\n";
+    g.parallelDFS(0);  // Start DFS from node 0
+
+    return 0;
+}
