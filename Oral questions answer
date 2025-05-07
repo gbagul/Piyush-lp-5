@@ -1,0 +1,92 @@
+dfs oral questions
+
+
+### **Basic Oral Questions (Conceptual Understanding)**
+
+1. **What is OpenMP?**
+
+   * **Answer:** OpenMP (Open Multi-Processing) is a parallel programming model that simplifies the process of writing parallel code for shared-memory systems. It provides directives that the compiler uses to parallelize loops and sections of code.
+
+2. **How does OpenMP parallelize code?**
+
+   * **Answer:** OpenMP uses compiler directives like `#pragma` to indicate parallel regions. It automatically divides the work across multiple threads, depending on the number of threads specified, and manages the synchronization of shared resources.
+
+3. **What is the role of `#pragma omp parallel` in your code?**
+
+   * **Answer:** The `#pragma omp parallel` directive tells the compiler to create a parallel region, where multiple threads execute the code concurrently. Each thread gets a copy of the loop variable and performs a portion of the task.
+
+4. **What is the use of the `#pragma omp critical` directive?**
+
+   * **Answer:** The `#pragma omp critical` directive ensures that the code block it wraps is executed by only one thread at a time. It is used to prevent race conditions when threads need to access shared resources.
+
+5. **Why is DFS difficult to parallelize?**
+
+   * **Answer:** DFS depends on the stack for backtracking, which requires a strict order of execution. Parallelizing it is tricky because accessing and modifying the stack from multiple threads simultaneously could lead to race conditions and unpredictable behavior.
+
+6. **What is the significance of the `visited[]` array in DFS?**
+
+   * **Answer:** The `visited[]` array ensures that each node in the graph is visited only once. It tracks whether a node has already been processed, preventing infinite loops in cyclic graphs and unnecessary revisits.
+
+7. **What is a stack and why is it used in DFS?**
+
+   * **Answer:** A stack is a data structure that follows the LIFO (Last-In-First-Out) principle. In DFS, it helps store nodes to explore and backtrack when necessary, ensuring that the deepest nodes are explored first.
+
+8. **What are the disadvantages of using `#pragma omp parallel for` in DFS?**
+
+   * **Answer:** `#pragma omp parallel for` splits the loop iterations across threads. However, since DFS involves sequentially visiting nodes based on the stack’s state, parallelizing the traversal of neighbors may cause issues with synchronization and thread contention.
+
+9. **How can you safely update shared variables in parallel code?**
+
+   * **Answer:** Shared variables should be updated using synchronization mechanisms such as `#pragma omp critical`, `#pragma omp atomic`, or other thread-safe techniques like locks or atomic operations to avoid race conditions.
+
+10. **What does `omp_get_thread_num()` do in OpenMP?**
+
+    * **Answer:** `omp_get_thread_num()` returns the unique thread ID for the calling thread within the parallel region. It can be used to identify which thread is performing a certain task.
+
+---
+
+### **Code-Based Questions (Practical and Technical)**
+
+1. **What is the purpose of the `addEdge()` function in your code?**
+
+   * **Answer:** The `addEdge()` function adds an undirected edge between two nodes in the graph. It does this by adding each node to the adjacency list of the other node.
+
+2. **How do you handle the stack operations in a parallel environment?**
+
+   * **Answer:** In your code, stack operations (`s.push()` and `s.pop()`) are wrapped inside a `#pragma omp critical` section to ensure that only one thread can perform these operations at a time, preventing race conditions.
+
+3. **How can you modify your program to use BFS instead of DFS?**
+
+   * **Answer:** To use BFS, you would replace the stack with a queue (FIFO). You would enqueue the starting node and explore each node's neighbors level by level, marking them as visited.
+
+4. **What is the purpose of `visited[]` array in the `parallelDFS` function?**
+
+   * **Answer:** The `visited[]` array keeps track of the nodes that have already been visited to avoid revisiting nodes and creating an infinite loop in case of cycles in the graph.
+
+5. **What would happen if you remove the `#pragma omp critical` section around the `s.push()` and `s.pop()` operations?**
+
+   * **Answer:** Without the `#pragma omp critical`, multiple threads could try to access and modify the shared stack simultaneously, leading to race conditions, inconsistent results, and possible crashes.
+
+6. **Why does the `parallelDFS` function use a `stack<int> s` instead of a queue for parallel traversal?**
+
+   * **Answer:** The stack is used for DFS to explore nodes deeply, i.e., it follows a LIFO order. A queue would be used for BFS, which explores nodes level-by-level.
+
+7. **How does `#pragma omp parallel for` work with the for loop inside DFS traversal?**
+
+   * **Answer:** The `#pragma omp parallel for` parallelizes the loop that traverses the neighbors of the current node. Each neighbor is processed by a different thread, though the critical section ensures that nodes are marked as visited and added to the stack safely.
+
+8. **What happens if you remove the `visited[neighbor] = true;` line from the code?**
+
+   * **Answer:** If the line is removed, the program could revisit nodes multiple times, leading to cycles or redundant exploration of the same nodes, which could cause infinite loops or unnecessary work.
+
+9. **Can the parallel DFS approach be improved? If so, how?**
+
+   * **Answer:** Yes, parallel DFS can be improved by considering a more sophisticated method like using task-based parallelism instead of directly parallelizing the stack operations. Another improvement could involve using a `std::atomic<bool>` for the `visited[]` array instead of using `#pragma omp critical`.
+
+10. **What would happen if you initialize `visited[]` inside the `#pragma omp parallel` block instead of outside?**
+
+    * **Answer:** If `visited[]` is initialized inside the parallel region, each thread would have its own local copy of the `visited[]` array, which would defeat the purpose of keeping track of global visited nodes across all threads. It should be shared across all threads.
+
+---
+
+These questions cover both theoretical concepts (about OpenMP, DFS, and parallelism) and practical issues in the code, helping to assess both the understanding of parallelization in DFS and the implementation details of the program.
